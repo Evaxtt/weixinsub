@@ -8,10 +8,12 @@ import os
 import urllib2
 import json
 from lxml import etree
+#from xml.etree import ElementTree as etree
 import cookielib
 import re
 import random
 import cxkd
+import talk_api
 from imgtest import *
 
 
@@ -50,6 +52,7 @@ class WeixinInterface:
         msgType=xml.find("MsgType").text
         fromUser=xml.find("FromUserName").text
         toUser=xml.find("ToUserName").text
+        userid = fromUser[0:15]
         #picurl = xml.find('PicUrl').text
         #return self.render.reply_text(fromUser,toUser,int(time.time()), content)
         if msgType == 'image':
@@ -59,6 +62,14 @@ class WeixinInterface:
                 return self.render.reply_text(fromUser, toUser, int(time.time()), '图中人物性别为'+datas[0]+'\n'+'年龄为'+datas[1])
             except:
                 return self.render.reply_text(fromUser, toUser, int(time.time()),  '识别失败，换张图片试试吧')
+        elif msgType == 'voice':
+            content = xml.find('Recognition').text
+            try:
+                msg = takl_api.talk(content, userid)
+                return self.render.reply_text(fromUser,toUser,int(time.time()), msg)
+            except:
+                return self.render.reply_text(fromUser,toUser,int(time.time()), content + '这货还不够聪明，换句话聊天吧')
+            #return self.render.reply_text(fromUser,toUser,int(time.time()), content)
         else:
             content = xml.find("Content").text  # 获得用户所输入的内容
             if content[0:2] == u"快递":
@@ -82,5 +93,11 @@ class WeixinInterface:
                 return self.render.reply_text(fromUser,toUser,int(time.time()), kuaidi)
 
             else:
-                return self.render.reply_text(fromUser,toUser,int(time.time()), content)
+            #     msg = talk_api.talk(content, userid)
+            #     return self.render.reply_text(fromUser,toUser,int(time.time()), msg)
+                try:
+                    msg = talk_api.talk(content, userid)
+                    return self.render.reply_text(fromUser,toUser,int(time.time()), msg)
+                except:
+                    return self.render.reply_text(fromUser,toUser,int(time.time()), '这货还不够聪明，换句话聊天吧')
 
